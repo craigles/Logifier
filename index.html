@@ -1,0 +1,39 @@
+
+<html ng-app="logifierApp">
+	<head>
+		<title>Logifier</title>
+		<link rel="stylesheet" href="lib/bootstrap.min.css">
+		<script src="lib/angular.min.js"></script>
+		<script src="js/controllers.js"></script>
+		<script src="js/logService.js"></script>
+		<script src="js/config.js"></script>
+	</head>
+
+	<body ng-controller="logsController">
+		<input ng-model="query" type="text" class="form-control" placeholder="Search">
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Date</th>
+					<th>Message Name</th>
+					<th>Member</th>
+					<th>Request</th>
+					<th>Response</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="log in logs | filter:query">
+					<td>{{log.Date | date:"MM/dd/yyyy @ h:mma"}}</td>
+					<td>{{log.MessageName}}</td>
+					<td>{{log.MemberNumber}}</td>
+					<td>
+						<pre>{{log.Request}}</pre>
+					</td>
+					<td>
+						<pre>{{log.Response}}</pre>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</body>
+</html>
