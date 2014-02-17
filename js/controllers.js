@@ -1,9 +1,12 @@
 var logifierApp = angular.module('logifierApp', []);
 
-logifierApp.factory('logService', ['$http', function(http) {
-	return new logService(http, config);
+logifierApp.factory('logService', ['$http', '$q', function(http, q) {
+	return new logService(http, q, config);
 }]);
 
 logifierApp.controller('logsController', function ($scope, logService) {
-	$scope.logs = logService.getLogs();
+	logService.getLogs().then(function(promise) {
+		$scope.logs = promise;
+	});
+	$scope.hasError = logService.hasError;
 });
