@@ -1,12 +1,13 @@
-function logService(http, config) {
+function logService(http, deferred, config) {
 	this.http = http;
 	this.config = config;
+	this.deferred = deferred;
 
 	this.getLogs = function() {
-		http.get(config.endpoint).success(function(data) {
-	    	var lastClass = "";
-	    	var lastRequestTime = 0;
-	    	
+        var def = deferred.defer();
+		var promise = http.get(config.endpoint).success(function(data) {
+
+			var logs = [];	    	
 	    	var responses = getResponses(data);
 	    	var requests = getRequests(data);
 
@@ -16,99 +17,101 @@ function logService(http, config) {
 				if (!response)
 					return;
 
-				var newRequestTime = Date.parse(req.Time);
-				lastClass = getRowClass(lastRequestTime, newRequestTime, lastClass);
-				lastRequestTime = newRequestTime;
-
-				//todo return synchronously!
+				logs.push({
+					DateTime: req.DateTime,
+					MessageName: req.ServiceName,
+					MemberNumber: req.MemberNumber,
+					Request: req.Request,
+					Response: response.Response
+				});
 			});
+
+			def.resolve(logs);
 	    });
-	}
-}
-	
 
-function getServiceName(xml) {
-	return xml.match(/name="(.*)" version/)[1];
-}
-
-function getMemberNumber(xml) {
-	var memberNumber = xml.match(/MEMBER_NUMBER>(.*)<\/MEMBER_NUMBER/)[1];
-	return memberNumber === "" ? "N/A" : memberNumber;
-}
-
-function getSessionId(xml) {
-	return xml.match(/session="(.*)" uid/)[1];
-}
-
-function formatRequest(xml) {
-	return xml.replace(/></g, ">\n<");
-}
-
-function getRowClass(lastRequestTime, newRequestTime, lastClass) {
-	var threshold = 3000;
-
-	if (lastClass === "")
-		return "info";
-
-	var isNewRequest = newRequestTime > (lastRequestTime + threshold);
-
-	if (isNewRequest)
-		return lastClass === "" ? "info" : "";
-
-	return lastClass;
-}
-
-function getResponses(data) {
-	var startTagIndices = getIndices(data, /<RESPONSE\s/gi);
-    var endTagIndices = getIndices(data, /<\/RESPONSE>/gi);
-    var responses = [];
-
-    for (i in startTagIndices) {
-    	var response = data.substring(startTagIndices[i], endTagIndices[i]+11);
-
-    	responses.push({
-    		Response: response,
-    		SessionId: getSessionId(response)
-    	});
-    }
-
-    return responses;
-}
-
-function getRequests(data) {
-	var startTagIndices = getIndices(data, /<REQUEST\s/gi);
-    var endTagIndices = getIndices(data, /<\/REQUEST>/gi);
-    var requests = [];
-
-    for (i in startTagIndices) {
-    	var request = data.substring(startTagIndices[i], endTagIndices[i]+10);
-
-    	requests.push({
-    		Request: request,
-    		Time: data.substring(endTagIndices[i]+12, endTagIndices[i]+32),
-    		MemberNumber: getMemberNumber(request),
-    		ServiceName: getServiceName(request),
-    		SessionId: getSessionId(request)
-    	});
-    }
-    return requests;
-}
-
-function findResponse(responses, sessionId) {
-	var response;
-	responses.forEach(function(res) {
-		if (res.SessionId === sessionId)
-			response = res;
-	});
-	return response;
-}
-
-function getIndices(string, regex) {
-	var result, indices = [];
-
-    while ((result = regex.exec(string))) {
-	    indices.push(result.index);
+	    return def.promise;
 	}
 
-	return indices;
+	this.hasError = function(xml) {
+		return xml.match(/<\/ERROR>/) != null;
+	}
+
+	var getServiceName = function (xml) {
+		return xml.match(/name="(.*)" version/)[1];
+	}
+
+	var getMemberNumber = function(xml) {
+		var memberNumber = xml.match(/MEMBER_NUMBER>(.*)<\/MEMBER_NUMBER/)[1];
+		return memberNumber === "" ? "N/A" : memberNumber;
+	}
+
+	var getSessionId = function(xml) {
+		return xml.match(/session="(.*)" uid/)[1];
+	}
+
+	var formatRequest = function(xml) {
+		return xml.replace(/></g, ">\n<");
+	}
+
+	var getResponses = function(data) {
+		var startTagIndices = getIndices(data, /<RESPONSE\s/gi);
+	    var endTagIndices = getIndices(data, /<\/RESPONSE>/gi);
+	    var responses = [];
+
+	    for (i in startTagIndices) {
+	    	var response = data.substring(startTagIndices[i], endTagIndices[i]+11);
+
+	    	responses.push({
+	    		Response: response,
+	    		SessionId: getSessionId(response)
+	    	});
+	    }
+
+	    return responses;
+	}
+
+	var getRequests = function(data) {
+		var startTagIndices = getIndices(data, /<REQUEST\s/gi);
+	    var endTagIndices = getIndices(data, /<\/REQUEST>/gi);
+	    var requests = [];
+
+	    for (i in startTagIndices) {
+	    	var request = data.substring(startTagIndices[i], endTagIndices[i]+10);
+
+	    	requests.push({
+	    		Request: formatRequest(request),
+	    		DateTime: new Date(data.substring(endTagIndices[i]+12, endTagIndices[i]+32)),
+	    		MemberNumber: getMemberNumber(request),
+	    		ServiceName: getServiceName(request),
+	    		SessionId: getSessionId(request)
+	    	});
+	    }
+	    return requests;
+	}
+
+	var findResponse = function(responses, sessionId) {
+		var response;
+		responses.forEach(function(res) {
+			if (res.SessionId === sessionId)
+				response = res;
+		});
+		return response;
+	}
+
+	var getIndices = function(string, regex) {
+		var result, indices = [];
+
+	    while ((result = regex.exec(string))) {
+		    indices.push(result.index);
+		}
+
+		return indices;
+	}
 }
+
+
+
+
+
+
+
