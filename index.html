@@ -1,11 +1,9 @@
-
 <html ng-app="logifierApp">
 	<head>	
 		<title>Logifier</title>
 		<link rel="stylesheet" href="lib/bootstrap.min.css">
 		<link rel="stylesheet" href="css/index.css">
 		<script src="lib/angular.min.js"></script>
-		<script src="js/stringFunctions.js"></script>
 		<script src="js/controllers.js"></script>
 		<script src="js/logService.js"></script>
 		<script src="js/config.js"></script>
@@ -27,11 +25,15 @@
 		<table class="table table-striped">
 			<thead>
 				<tr>
-					<th ng-repeat="title in logs.titles">{{title}}</th>
+					<th>Date</th>
+					<th>Message</th>
+					<th>Member</th>
+					<th>Request</th>
+					<th>Response</th>
 				</tr>
 			</thead>
 			<tbody>
-				<tr ng-repeat="log in logs | filter:query | orderBy:'-DateTime'" ng-class="{{hasError(log.Response)}} ? 'danger' : ''">
+				<tr ng-repeat="log in logs | filter:query | orderBy:'-DateTime'" ng-class="{'danger': log.HasError}">
 					<td>{{log.DateTime | date:"MM/dd/yyyy @ hh:mm:ss"}}</td>
 					<td>{{log.MessageName}}</td>
 					<td>{{log.MemberNumber}}</td>
