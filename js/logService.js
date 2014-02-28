@@ -1,11 +1,8 @@
 function LogService(http, deferred, config) {
-	this.http = http;
-	this.config = config;
-	this.deferred = deferred;
 
 	this.getLogs = function () {
-        var def = this.deferred.defer();
-        this.http.get(this.config.endpoint).success(function (data) {
+        var def = deferred.defer();
+        http.get(config.endpoint).success(function (data) {
 
             var logs = [];
             var responses = getResponses(data);
