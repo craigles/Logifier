@@ -1,102 +1,102 @@
-function logService(http, deferred, config) {
+function LogService(http, deferred, config) {
 	this.http = http;
 	this.config = config;
 	this.deferred = deferred;
 
-	this.getLogs = function() {
-        var def = deferred.defer();
-		var promise = http.get(config.endpoint).success(function(data) {
+	this.getLogs = function () {
+        var def = this.deferred.defer();
+        this.http.get(this.config.endpoint).success(function (data) {
 
-			var logs = [];	    	
-	    	var responses = getResponses(data);
-	    	var requests = getRequests(data);
+            var logs = [];
+            var responses = getResponses(data);
+            var requests = getRequests(data);
 
-			requests.forEach(function(req) {
-				var response = findResponse(responses, req.SessionId);
+            requests.forEach(function (req) {
+                var response = findResponse(responses, req.SessionId);
 
-				if (!response)
-					return;
+                if (!response)
+                    return;
 
-				logs.push({
-					DateTime: req.DateTime,
-					MessageName: req.ServiceName,
-					MemberNumber: req.MemberNumber,
-					Request: req.Request,
-					Response: response.Response
-				});
-			});
+                logs.push({
+                    DateTime: req.DateTime,
+                    MessageName: req.ServiceName,
+                    MemberNumber: req.MemberNumber,
+                    Request: req.Request,
+                    Response: response.Response
+                });
+            });
 
-			def.resolve(logs);
-	    });
+            def.resolve(logs);
+        });
 
-	    return def.promise;
-	}
+        return def.promise;
+    };
 
-	this.hasError = function(xml) {
-		return xml.match(/<\/ERROR>/) != null;
-	}
+	this.hasError = function (xml) {
+        return xml.match(/<\/ERROR>/) != null;
+    };
 
 	var getServiceName = function (xml) {
-		return xml.match(/name="(.*)" version/)[1];
-	}
+        return xml.match(/name="(.*)" version/)[1];
+    };
 
-	var getMemberNumber = function(xml) {
-		var memberNumber = xml.match(/MEMBER_NUMBER>(.*)<\/MEMBER_NUMBER/)[1];
-		return memberNumber === "" ? "N/A" : memberNumber;
-	}
+	var getMemberNumber = function (xml) {
+        var memberNumber = xml.match(/MEMBER_NUMBER>(.*)<\/MEMBER_NUMBER/)[1];
+        return memberNumber === "" ? "N/A" : memberNumber;
+    };
 
-	var getSessionId = function(xml) {
-		return xml.match(/session="(.*)" uid/)[1];
-	}
+	var getSessionId = function (xml) {
+        return xml.match(/session="(.*)" uid/)[1];
+    };
 
-	var formatRequest = function(xml) {
-		return xml.replace(/></g, ">\n<");
-	}
+	var formatRequest = function (xml) {
+        return xml.replace(/></g, ">\n<");
+    };
 
-	var getResponses = function(data) {
-		var startTagIndices = getIndices(data, /<RESPONSE\s/gi);
-	    var endTagIndices = getIndices(data, /<\/RESPONSE>/gi);
-	    var responses = [];
+	var getResponses = function (data) {
+        var startTagIndices = getIndices(data, /<RESPONSE\s/gi);
+        var endTagIndices = getIndices(data, /<\/RESPONSE>/gi);
+        var responses = [];
 
-	    for (i in startTagIndices) {
-	    	var response = data.substring(startTagIndices[i], endTagIndices[i]+11);
+        for (var i in startTagIndices) {
+            var response = data.substring(startTagIndices[i], endTagIndices[i] + 11);
 
-	    	responses.push({
-	    		Response: response,
-	    		SessionId: getSessionId(response)
-	    	});
-	    }
+            responses.push({
+                Response: response,
+                SessionId: getSessionId(response)
+            });
+        }
 
-	    return responses;
-	}
+        return responses;
+    };
 
-	var getRequests = function(data) {
-		var startTagIndices = getIndices(data, /<REQUEST\s/gi);
-	    var endTagIndices = getIndices(data, /<\/REQUEST>/gi);
-	    var requests = [];
+	var getRequests = function (data) {
+        var startTagIndices = getIndices(data, /<REQUEST\s/gi);
+        var endTagIndices = getIndices(data, /<\/REQUEST>/gi);
+        var requests = [];
 
-	    for (i in startTagIndices) {
-	    	var request = data.substring(startTagIndices[i], endTagIndices[i]+10);
+        for (var i in startTagIndices) {
+            var request = data.substring(startTagIndices[i], endTagIndices[i] + 10);
 
-	    	requests.push({
-	    		Request: formatRequest(request),
-	    		DateTime: new Date(data.substring(endTagIndices[i]+12, endTagIndices[i]+32)),
-	    		MemberNumber: getMemberNumber(request),
-	    		ServiceName: getServiceName(request),
-	    		SessionId: getSessionId(request)
-	    	});
-	    }
-	    return requests;
-	}
+            requests.push({
+                Request: formatRequest(request),
+                DateTime: new Date(data.substring(endTagIndices[i] + 12, endTagIndices[i] + 31)),
+                MemberNumber: getMemberNumber(request),
+                ServiceName: getServiceName(request),
+                SessionId: getSessionId(request)
+            });
+        }
+        return requests;
+    };
 
-	var findResponse = function(responses, sessionId) {
-		var response;
-		responses.forEach(function(res) {
-			if (res.SessionId === sessionId)
-				response = res;
-		});
-		return response;
-	}
+	var findResponse = function (responses, sessionId) {
+        var response = null;
+        responses.forEach(function (res) {
+            if (res.SessionId === sessionId)
+                response = res;
+        });
+        return response;
+    };
 
 	var getIndices = function(string, regex) {
 		var result, indices = [];

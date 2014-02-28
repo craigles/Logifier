@@ -1,3 +1,3 @@
 var config = {
-	endpoint: "http://localhost/Logs/HBL_WCFWebServices.log"
+	endpoint: "http://localhost:63342/Logifier/logs/Test.log"
 };
