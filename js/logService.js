@@ -58,7 +58,8 @@ function LogService(http, deferred, config) {
         var endTagIndices = getIndices(data, /<\/RESPONSE>/gi);
         var responses = [];
 
-        for (var i in startTagIndices) {
+        for (var i = 0; i < startTagIndices.length; i++) {
+
             var response = data.substring(startTagIndices[i], endTagIndices[i] + 11);
 
             responses.push({
@@ -75,7 +76,7 @@ function LogService(http, deferred, config) {
         var endTagIndices = getIndices(data, /<\/REQUEST>/gi);
         var requests = [];
 
-        for (var i in startTagIndices) {
+        for (var i = 0; i < startTagIndices.length; i++) {
             var request = data.substring(startTagIndices[i], endTagIndices[i] + 10);
 
             requests.push({
