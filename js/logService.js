@@ -18,6 +18,7 @@ function LogService(http, deferred, config) {
                     DateTime: req.DateTime,
                     MessageName: req.ServiceName,
                     MemberNumber: req.MemberNumber,
+                    HasError: hasError(response.Response),
                     Request: req.Request,
                     Response: response.Response
                 });
@@ -29,7 +30,7 @@ function LogService(http, deferred, config) {
         return def.promise;
     };
 
-	this.hasError = function (xml) {
+	var hasError = function (xml) {
         return xml.match(/<\/ERROR>/) != null;
     };
 
