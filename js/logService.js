@@ -20,7 +20,7 @@ function LogService(http, deferred, config) {
                     MemberNumber: req.MemberNumber,
                     HasError: hasError(response.Response),
                     Request: req.Request,
-                    Response: response.Response
+                    Response: format(response.Response)
                 });
             });
 
@@ -47,8 +47,8 @@ function LogService(http, deferred, config) {
         return xml.match(/session="(.*)" uid/)[1];
     };
 
-	var formatRequest = function (xml) {
-        return xml.replace(/></g, ">\n<");
+	var format = function (xml) {
+        return xml.replace(/>\s*</g, ">\n<");
     };
 
 	var getResponses = function (data) {
@@ -78,7 +78,7 @@ function LogService(http, deferred, config) {
             var request = data.substring(startTagIndices[i], endTagIndices[i] + 10);
 
             requests.push({
-                Request: formatRequest(request),
+                Request: format(request),
                 DateTime: new Date(data.substring(endTagIndices[i] + 12, endTagIndices[i] + 31)),
                 MemberNumber: getMemberNumber(request),
                 ServiceName: getServiceName(request),
